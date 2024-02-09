@@ -11,8 +11,8 @@ from utils import angle_of_line, DataLogger
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--x_start', type=int, default=0, help='X of start')
-    parser.add_argument('--y_start', type=int, default=90, help='Y of start')
+    parser.add_argument('--x_start', type=int, default=4, help='X of start')
+    parser.add_argument('--y_start', type=int, default=5, help='Y of start')
     parser.add_argument('--x_end', type=int, default=90, help='X of end')
     parser.add_argument('--y_end', type=int, default=80, help='Y of end')
     parser.add_argument('--parking', type=int, default=3, help='park position in parking1 out of 24')
@@ -23,7 +23,7 @@ if __name__ == '__main__':
     ########################## default variables ################################################
 
     start = np.array([args.x_start, args.y_start])
-    end   = np.array([args.x_end, args.y_end])
+    end = np.array([args.x_end, args.y_end])
 
     #############################################################################################
 
@@ -51,7 +51,7 @@ if __name__ == '__main__':
     controller = MPC_Controller()
 
     res = env.render(my_car.x, my_car.y, my_car.psi, 0)
-    cv2.imshow('environment', res)
+    cv2.imshow('valet parking', res)
     key = cv2.waitKey(1)
     #############################################################################################
 
@@ -65,7 +65,8 @@ if __name__ == '__main__':
     path = path_planner.plan_path(int(start[0]),int(start[1]),int(new_end[0]),int(new_end[1]))
 
     path = np.vstack([path, ensure_path1])
-    interpolated_path = path_planner.interpolate_path(path)
+    print(path)
+    interpolated_path = path_planner.interpolate_path(path)         # division by 0 error here
 
     print('interpolating ...')
     interpolated_park_path = park_path_planner.interpolate_park_path(park_path)

@@ -91,18 +91,29 @@ class Environment:
 class Parking1:
     def __init__(self, car_pos):
         self.car_obstacle = self.make_car()
-        self.walls = [[70,i] for i in range(-5,90) ]+\
-                     [[30,i] for i in range(10,105)]+\
-                     [[i,10] for i in range(30,36) ]+\
-                     [[i,90] for i in range(70,76) ] #+ [[i,20] for i in range(-5,50)]
+        # self.walls = [[70,i] for i in range(-5,90) ]+\
+        #              [[30,i] for i in range(10,105)]+\
+        #              [[i,10] for i in range(30,36) ]+\
+        #              [[i,90] for i in range(70,76) ] #+ [[i,20] for i in range(-5,50)]
         # self.walls = [0,100]
+        self.walls = [[70, i] for i in range(20, 90)] + \
+                     [[30, i] for i in range(20, 90)] + \
+                     [[i, 20] for i in range(30, 70)] + \
+                     [[i, 90] for i in range(30, 70)]
+
+        # self.walls = [[75, i] for i in range(50, 70)] + \
+        #              [[30, i] for i in range(50, 70)] + \
+        #              [[i, 50] for i in range(30, 75)] + \
+        #              [[i, 70] for i in range(30, 75)]
         self.obs = np.array(self.walls)
-        self.cars = {1 : [[35,20]], 2 : [[65,20]], 3 : [[75,20]], 4 : [[95,20]],
-                     5 : [[35,32]], 6 : [[65,32]], 7 : [[75,32]], 8 : [[95,32]],
-                     9 : [[35,44]], 10: [[65,44]], 11: [[75,44]], 12: [[95,44]],
-                     13: [[35,56]], 14: [[65,56]], 15: [[75,56]], 16: [[95,56]],
-                     17: [[35,68]], 18: [[65,68]], 19: [[75,68]], 20: [[95,68]],
-                     21: [[35,80]], 22: [[65,80]], 23: [[75,80]], 24: [[95,80]]}
+        # self.cars = {1 : [[35,20]], 2 : [[65,20]], 3 : [[75,20]], 4 : [[95,20]],
+        #              5 : [[35,32]], 6 : [[65,32]], 7 : [[75,32]], 8 : [[95,32]],
+        #              9 : [[35,44]], 10: [[65,44]], 11: [[75,44]], 12: [[95,44]],
+        #              13: [[35,56]], 14: [[65,56]], 15: [[75,56]], 16: [[95,56]],
+        #              17: [[35,68]], 18: [[65,68]], 19: [[75,68]], 20: [[95,68]],
+        #              21: [[35,80]], 22: [[65,80]], 23: [[75,80]], 24: [[95,80]]}
+        self.cars = {1: [[95,45]], 2: [[95,57]], 3: [[95,69]], 4: [[95,81]]}        # experiment
+        # self.cars = {1: [[30, 20]], 2: [[45, 20]], 3: [[60, 20]], 4: [[75, 20]]}  # Valet car obstacles
         self.end = self.cars[car_pos][0]
         self.cars.pop(car_pos)
 
@@ -115,5 +126,6 @@ class Parking1:
 
     def make_car(self):
         car_obstacle_x, car_obstacle_y = np.meshgrid(np.arange(-2,2), np.arange(-4,4))
+        # car_obstacle_x, car_obstacle_y = np.meshgrid(np.arange(-4,4), np.arange(-2, 2),)
         car_obstacle = np.dstack([car_obstacle_x, car_obstacle_y]).reshape(-1,2)
         return car_obstacle
