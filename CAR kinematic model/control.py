@@ -29,7 +29,13 @@ class Car_Dynamics:
         self.v = self.state[2,0]
         self.psi = self.state[3,0]
 
-    
+
+# create classes for diWheel robot and truck robot
+class Trailer_Dynamics(Car_Dynamics):
+    pass
+class DiWheel_Dyanmics(Car_Dynamics):
+    pass
+
 class MPC_Controller:
     def __init__(self):
         self.horiz = None
