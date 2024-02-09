@@ -15,7 +15,7 @@ if __name__ == '__main__':
     parser.add_argument('--y_start', type=int, default=90, help='Y of start')
     parser.add_argument('--x_end', type=int, default=90, help='X of end')
     parser.add_argument('--y_end', type=int, default=80, help='Y of end')
-    parser.add_argument('--parking', type=int, default=2, help='park position in parking1 out of 24')
+    parser.add_argument('--parking', type=int, default=3, help='park position in parking1 out of 24')
 
     args = parser.parse_args()
     logger = DataLogger()
