@@ -28,7 +28,6 @@ def interpolate_path(path, sample_rate):
 ################################################ Path Planner ################################################
 
 class AStarPlanner:
-
     def __init__(self, ox, oy, resolution, rr):
         """
         Initialize grid map for a star planning
@@ -38,7 +37,6 @@ class AStarPlanner:
         resolution: grid resolution [m]
         rr: robot radius[m]
         """
-
         self.resolution = resolution
         self.rr = rr
         self.min_x, self.min_y = 0, 0
@@ -62,7 +60,6 @@ class AStarPlanner:
     def planning(self, sx, sy, gx, gy):
         """
         A star path search
-
         input:
             s_x: start x position [m]
             s_y: start y position [m]
