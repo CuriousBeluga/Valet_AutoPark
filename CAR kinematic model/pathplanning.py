@@ -222,9 +222,9 @@ class AStarPlanner:
 
 
 class PathPlanning:
-    def __init__(self,obstacles):
+    def __init__(self,obstacles,vehicle):           # add arguments for robot radius and whatnot
         self.margin = 5
-        #sacale obstacles from env margin to pathplanning margin
+        #scale obstacles from env margin to pathplanning margin
         obstacles = obstacles + np.array([self.margin,self.margin])
         obstacles = obstacles[(obstacles[:,0]>=0) & (obstacles[:,1]>=0)]
 
@@ -237,7 +237,13 @@ class PathPlanning:
         self.ox = [int(item) for item in self.obs[:,0]]
         self.oy = [int(item) for item in self.obs[:,1]]
         self.grid_size = 1
-        self.robot_radius = 4
+
+        if vehicle == 'diwheel':
+            self.robot_radius = 2   # diwheel
+        elif vehicle =='trailer':
+            self.robot_radius = 10
+        elif vehicle =='car':
+            self.robot_radius = 4 # car
         self.a_star = AStarPlanner(self.ox, self.oy, self.grid_size, self.robot_radius)
 
     def plan_path(self,sx, sy, gx, gy):    
@@ -250,7 +256,7 @@ class PathPlanning:
 ############################################### Park Path Planner #################################################
 
 class ParkPathPlanning:
-    def __init__(self,obstacles):
+    def __init__(self,obstacles,vehicle):
         self.margin = 5
         #sacale obstacles from env margin to pathplanning margin
         obstacles = obstacles + np.array([self.margin,self.margin])
@@ -265,10 +271,15 @@ class ParkPathPlanning:
         self.ox = [int(item) for item in self.obs[:,0]]
         self.oy = [int(item) for item in self.obs[:,1]]
         self.grid_size = 1
-        self.robot_radius = 4
+        if vehicle == 'diwheel':
+            self.robot_radius = 2  # diwheel
+        elif vehicle == 'trailer':
+            self.robot_radius = 10
+        elif vehicle == 'car':
+            self.robot_radius = 4  # car
         self.a_star = AStarPlanner(self.ox, self.oy, self.grid_size, self.robot_radius)
 
-    def generate_park_scenario(self,sx, sy, gx, gy):    
+    def generate_park_scenario(self,sx, sy, gx, gy,vehicle):
         rx, ry = self.a_star.planning(sx+self.margin, sy+self.margin, gx+self.margin, gy+self.margin)
         rx = np.array(rx)-self.margin+0.5
         ry = np.array(ry)-self.margin+0.5
@@ -316,6 +327,18 @@ class ParkPathPlanning:
             ensure_path1 = np.vstack([np.repeat(x_ensure1,3/0.25), np.arange(y_ensure1,y_ensure1+3,0.25)]).T
             ensure_path2 = np.vstack([np.repeat(x_ensure2,3/0.25), np.arange(y_ensure2-3,y_ensure2,0.25)]).T
             park_path = self.plan_park_up_right(x_ensure2, y_ensure2)
+
+
+        if vehicle == 'diwheel':
+            x_ensure2 = gx
+            y_ensure2 = gy
+            x_ensure1 = x_ensure2 - d - w
+            y_ensure1 = y_ensure2 - l - s
+            ensure_path1 = np.vstack(
+                [np.repeat(x_ensure1, 3 / 0.25), np.arange(y_ensure1 - 3, y_ensure1, 0.25)[::-1]]).T
+            ensure_path2 = np.vstack(
+                [np.repeat(x_ensure2, 3 / 0.25), np.arange(y_ensure2, y_ensure2 + 3, 0.25)[::-1]]).T
+            park_path = self.plan_park_down_left(x_ensure2, y_ensure2)
 
         return np.array([x_ensure1, y_ensure1]), park_path, ensure_path1, ensure_path2
 

@@ -2,14 +2,17 @@ import cv2
 import numpy as np
 
 class Environment:
-    def __init__(self,obstacles):
+    def __init__(self,obstacles,vehicle_type,car_length = 80,car_width = 40,wheel_length = 15, wheel_width = 7):
         self.margin = 5
         #coordinates are in [x,y] format
-        self.car_length = 80
-        self.car_width = 40
-        self.wheel_length = 15
-        self.wheel_width = 7
-        self.wheel_positions = np.array([[25,15],[25,-15],[-25,15],[-25,-15]])
+        self.car_length = car_length
+        self.car_width = car_width
+        self.wheel_length = wheel_length
+        self.wheel_width = wheel_width
+        if vehicle_type == "car":
+            self.wheel_positions = np.array([[25,15],[25,-15],[-25,15],[-25,-15]])
+        elif vehicle_type == "diwheel":
+            self.wheel_positions = np.array([[0, 10], [0, -10]])
         
         self.color = np.array([0,0,255])/255
         self.wheel_color = np.array([20,20,20])/255
@@ -86,6 +89,9 @@ class Environment:
 
         rendered = cv2.resize(np.flip(rendered, axis=0), (700,700))
         return rendered
+    def render_trailer(self):
+        # need different render scheme for trailer because it is two bodies
+        pass
 
 
 class Parking1:
@@ -112,7 +118,8 @@ class Parking1:
         #              13: [[35,56]], 14: [[65,56]], 15: [[75,56]], 16: [[95,56]],
         #              17: [[35,68]], 18: [[65,68]], 19: [[75,68]], 20: [[95,68]],
         #              21: [[35,80]], 22: [[65,80]], 23: [[75,80]], 24: [[95,80]]}
-        self.cars = {1: [[95,45]], 2: [[95,57]], 3: [[95,69]], 4: [[95,81]]}        # experiment
+        # self.cars = {1: [[95,45]], 2: [[95,57]], 3: [[95,69]], 4: [[95,81]]}        # car parallel park
+        self.cars = {1: [[95, 45]], 2: [[95, 54]], 3: [[95, 63]], 4: [[95, 72]]}  # diwheel parallel park
         # self.cars = {1: [[30, 20]], 2: [[45, 20]], 3: [[60, 20]], 4: [[75, 20]]}  # Valet car obstacles
         self.end = self.cars[car_pos][0]
         self.cars.pop(car_pos)

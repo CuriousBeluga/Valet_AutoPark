@@ -32,9 +32,54 @@ class Car_Dynamics:
 
 # create classes for diWheel robot and truck robot
 class Trailer_Dynamics(Car_Dynamics):
-    pass
+    def __init__(self, x_0, y_0, v_0, psi_0, length, dt,trailer_length):
+        super().__init__(x_0, y_0, v_0, psi_0, length, dt)                  # inherit some of the variables from the Car class
+        self.trailer_L = trailer_length
+        self.state = np.array([[self.x, self.y, self.v, self.psi]]).T
+
+    def move(self, accelerate, delta):
+        x_dot = self.v*np.cos(self.psi)
+        y_dot = self.v*np.sin(self.psi)
+        v_dot = accelerate
+        psi_dot = self.v*np.tan(delta)/self.L
+        return np.array([[x_dot, y_dot, v_dot, psi_dot]]).T
+
+    def update_state(self, state_dot):
+        # self.u_k = command
+        # self.z_k = state
+        self.state = self.state + self.dt*state_dot
+        self.x = self.state[0,0]
+        self.y = self.state[1,0]
+        self.v = self.state[2,0]
+        self.psi = self.state[3,0]
 class DiWheel_Dyanmics(Car_Dynamics):
-    pass
+    def __init__(self, x_0, y_0, v_0, psi_0, length, dt, theta_0,wheel_base = 2):
+        super().__init__(x_0, y_0, v_0, psi_0, length, dt)
+        self.theta = theta_0
+        self.wheel_base = wheel_base        # need to specify wheel_base later
+        self.state = np.array([[self.x, self.y, self.v, self.theta]]).T
+
+    def move_diwheel(self, accelerate, delta):
+        v_left = v_right = accelerate*delta
+        # linear and angular velocities
+        v = (v_left + v_right)/2.0
+        omega = (v_right-v_left)/self.wheel_base
+        x_dot = v * np.cos(self.theta)
+        y_dot = v * np.sin(self.theta)
+        v_dot = accelerate
+        self.theta += omega * delta
+        self.theta %= (2 * np.pi)
+        # theta returns the orientation of the vehicle
+        return np.array([[x_dot, y_dot, v_dot, self.theta]]).T
+
+    def update_state(self, state_dot):
+        # self.u_k = command
+        # self.z_k = state
+        self.state = self.state + self.dt*state_dot
+        self.x = self.state[0,0]
+        self.y = self.state[1,0]
+        self.v = self.state[2,0]
+        self.theta = self.state[3,0]
 
 class MPC_Controller:
     def __init__(self):
