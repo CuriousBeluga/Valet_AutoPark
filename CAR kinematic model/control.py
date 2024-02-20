@@ -32,17 +32,29 @@ class Car_Dynamics:
 
 # create classes for diWheel robot and truck robot
 class Trailer_Dynamics(Car_Dynamics):
-    def __init__(self, x_0, y_0, v_0, psi_0, length, dt,trailer_length):
-        super().__init__(x_0, y_0, v_0, psi_0, length, dt)                  # inherit some of the variables from the Car class
+    # equations are sourced from MATLAB article: https://www.mathworks.com/help/nav/ug/reverse-capable-motion-planning-for-tractor-trailer-model-using-plannercontrolrrt.html
+    # and laValle: https://msl.cs.uiuc.edu/planning/node661.html
+    def __init__(self, x_0, y_0, v_0, psi_0, vehicle_length, dt,trailer_length,beta):
+        super().__init__(x_0, y_0, v_0, psi_0, vehicle_length, dt)                  # inherit some of the variables from the Car class
         self.trailer_L = trailer_length
-        self.state = np.array([[self.x, self.y, self.v, self.psi]]).T
+        # self.theta = theta              # leading car orientation
+        self.beta = beta                # trailer orientation
+        self.v_trailer=v_0
+        self.x_trailer = 0
+        self.y_trailer = 0
+        self.state = np.array([[self.x, self.y, self.v, self.psi,self.x_trailer,self.y_trailer,self.v_trailer,self.beta]]).T
 
     def move(self, accelerate, delta):
         x_dot = self.v*np.cos(self.psi)
         y_dot = self.v*np.sin(self.psi)
         v_dot = accelerate
         psi_dot = self.v*np.tan(delta)/self.L
-        return np.array([[x_dot, y_dot, v_dot, psi_dot]]).T
+        x_dot_trailer = self.v_trailer*np.cos(self.psi + self.beta)
+        y_dot_trailer = self.v_trailer * np.sin(self.psi + self.beta)
+        v_dot_trailer = 0
+        beta_dot = self.v_trailer*np.tan(delta)/self.trailer_L
+
+        return np.array([[x_dot, y_dot, v_dot, psi_dot,x_dot_trailer,y_dot_trailer,v_dot_trailer,beta_dot]]).T
 
     def update_state(self, state_dot):
         # self.u_k = command
@@ -52,6 +64,10 @@ class Trailer_Dynamics(Car_Dynamics):
         self.y = self.state[1,0]
         self.v = self.state[2,0]
         self.psi = self.state[3,0]
+        self.x_trailer = self.state[4,0]
+        self.y_trailer = self.state[5,0]
+        self.v_trailer = self.state[6,0]
+        self.beta = self.state[7,0]
 class DiWheel_Dyanmics(Car_Dynamics):
     def __init__(self, x_0, y_0, v_0, psi_0, length, dt, theta_0,wheel_base = 2):
         super().__init__(x_0, y_0, v_0, psi_0, length, dt)

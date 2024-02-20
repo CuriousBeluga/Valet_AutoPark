@@ -56,6 +56,7 @@ class Environment:
                     [np.sin(angle),  np.cos(angle)]])
         return ((R @ pts.T).T).astype(int)
 
+
     def render(self, x, y, psi, delta):
         # x,y in 100 coordinates
         x = int(10*x)

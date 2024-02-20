@@ -258,7 +258,7 @@ class PathPlanning:
 class ParkPathPlanning:
     def __init__(self,obstacles,vehicle):
         self.margin = 5
-        #sacale obstacles from env margin to pathplanning margin
+        #scale obstacles from env margin to pathplanning margin
         obstacles = obstacles + np.array([self.margin,self.margin])
         obstacles = obstacles[(obstacles[:,0]>=0) & (obstacles[:,1]>=0)]
 

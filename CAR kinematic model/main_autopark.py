@@ -42,14 +42,7 @@ if __name__ == '__main__':
     #############################################################################################
 
     ########################### initialization ##################################################
-    # car_length = 80       #car
-    # car_width = 40            #car
-    # wheel_length = 15         #car
-    # wheel_width = 7           #car
-    car_length = 20         #diwheel
-    car_width = 20             #diwheel
-    wheel_length = 7            #diwheel
-    wheel_width = 3             #diwheel
+
     flag = True
     while flag:
         vehicle = input("Please choose a vehicle, type the name without parentheses: (diwheel) (car) (trailer)\n")  # change for each type of vehicle
@@ -58,12 +51,27 @@ if __name__ == '__main__':
         else:
             print("I'm sorry, please type again")
 
+    if vehicle == 'diwheel':
+        car_length = 20  # diwheel
+        car_width = 20  # diwheel
+        wheel_length = 7  # diwheel
+        wheel_width = 3  # diwheel
+        length = 2
+        dt = 0.2
+        my_car = DiWheel_Dyanmics(start[0], start[1], 0, np.deg2rad(args.psi_start), length, dt, theta_0=0,
+                                  wheel_base=2)  # diwheel
+    elif vehicle == 'car':
+        car_length = 80            #car
+        car_width = 40            #car
+        wheel_length = 15         #car
+        wheel_width = 7           #car
+        my_car = Car_Dynamics(start[0], start[1], 0, np.deg2rad(args.psi_start), length=4, dt=0.2) # regular car
+
     env = Environment(obs,vehicle,car_length,car_width,wheel_length, wheel_width)
 
-    length = 2
-    dt = 0.2
-    # my_car = Car_Dynamics(start[0], start[1], 0, np.deg2rad(args.psi_start), length=4, dt=0.2) # regular car
-    my_car = DiWheel_Dyanmics(start[0], start[1], 0, np.deg2rad(args.psi_start), length, dt,theta_0= 0,wheel_base= 2)  # diwheel
+
+
+
     MPC_HORIZON = 5
     controller = MPC_Controller()
     # controller = Linear_MPC_Controller()
@@ -90,6 +98,7 @@ if __name__ == '__main__':
     interpolated_park_path = interpolate_path(park_path, sample_rate=2)
     interpolated_park_path = np.vstack([ensure_path1[::-1], interpolated_park_path, ensure_path2[::-1]])
 
+    # env.draw_path(path)
     env.draw_path(interpolated_path)
     env.draw_path(interpolated_park_path)
 
@@ -99,6 +108,13 @@ if __name__ == '__main__':
 
     ################################## control ##################################################
     print('driving to destination ...')
+
+    for i in range(len(interpolated_path)):         # experimenting with render
+        coord = interpolated_path[i]
+        res = env.render(coord[0],coord[1],my_car.theta,1)
+
+        cv2.imshow('environment', res)
+
     for i,point in enumerate(final_path):
         
             acc, delta = controller.optimize(my_car, final_path[i:i+MPC_HORIZON])
@@ -114,9 +130,10 @@ if __name__ == '__main__':
 
     # maybe create a new function that just animates some positions of the vehicle at certain points.
 
+
     # zeroing car steer
     # res = env.render(my_car.x, my_car.y, my_car.psi, 0)  # regular car
-    res = env.render(my_car.x, my_car.y, my_car.theta, 0)  # Diwheel
+    # res = env.render(my_car.x, my_car.y, my_car.theta, 0)  # Diwheel
     logger.save_data()
     cv2.imshow('environment', res)
     key = cv2.waitKey()
