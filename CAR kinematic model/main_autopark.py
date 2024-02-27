@@ -5,7 +5,7 @@ import argparse
 
 from environment import Environment, Parking1
 from pathplanning import PathPlanning, ParkPathPlanning, interpolate_path
-from control import Car_Dynamics, Trailer_Dynamics, DiWheel_Dyanmics, MPC_Controller, Linear_MPC_Controller
+from control import Car_Dynamics, Trailer_Dynamics, DiWheel_Dyanmics, MPC_Controller # Linear_MPC_Controller
 from utils import angle_of_line, make_square, DataLogger
 
 if __name__ == '__main__':
@@ -21,28 +21,17 @@ if __name__ == '__main__':
     args = parser.parse_args()
     logger = DataLogger()
 
-    ########################## default variables ################################################
+    # initialize start and end poses
     start = np.array([args.x_start, args.y_start])
-    end   = np.array([args.x_end, args.y_end])
-    #############################################################################################
+    end = np.array([args.x_end, args.y_end])
 
-    # environment margin  : 5
-    # pathplanning margin : 5
-
-    ########################## defining obstacles ###############################################
+    # define obstacles
     parking1 = Parking1(args.parking)
     end, obs = parking1.generate_obstacles()
 
-    # add squares
-    # square1 = make_square(10,65,20)
-    # square2 = make_square(15,30,20)
-    # square3 = make_square(50,50,10)
-    # obs = np.vstack([obs,square1,square2,square3])
 
-    #############################################################################################
 
-    ########################### initialization ##################################################
-
+    # vehicle selection and environment creation
     flag = True
     while flag:
         vehicle = input("Please choose a vehicle, type the name without parentheses: (diwheel) (car) (trailer)\n")  # change for each type of vehicle
@@ -69,31 +58,29 @@ if __name__ == '__main__':
 
     env = Environment(obs,vehicle,car_length,car_width,wheel_length, wheel_width)
 
-
-
-
     MPC_HORIZON = 5
     controller = MPC_Controller()
-    # controller = Linear_MPC_Controller()
+    if vehicle == "diwheel":
+        res = env.render(my_car.x, my_car.y, my_car.theta, 0)  # diwheel
+    elif vehicle == 'car':
+        res = env.render(my_car.x, my_car.y, my_car.psi, 0)             # regular car
 
-    # res = env.render(my_car.x, my_car.y, my_car.psi, 0)             # regular car
-    res = env.render(my_car.x, my_car.y, my_car.theta, 0)         # diwheel
     cv2.imshow('environment', res)
     key = cv2.waitKey(1)
-    #############################################################################################
 
-    ############################# path planning #################################################
+
+    # create path planning object
     park_path_planner = ParkPathPlanning(obs,vehicle)
     path_planner = PathPlanning(obs,vehicle)
 
-    print('planning park scenario ...')
+    # planning parallel park
     new_end, park_path, ensure_path1, ensure_path2 = park_path_planner.generate_park_scenario(int(start[0]),int(start[1]),int(end[0]),int(end[1]),vehicle)
-    
-    print('routing to destination ...')
+
+    # creating path
     path = path_planner.plan_path(int(start[0]),int(start[1]),int(new_end[0]),int(new_end[1]))
     path = np.vstack([path, ensure_path1])
 
-    print('interpolating ...')
+    # interpolating path
     interpolated_path = interpolate_path(path, sample_rate=5)
     interpolated_park_path = interpolate_path(park_path, sample_rate=2)
     interpolated_park_path = np.vstack([ensure_path1[::-1], interpolated_park_path, ensure_path2[::-1]])
@@ -104,9 +91,7 @@ if __name__ == '__main__':
 
     final_path = np.vstack([interpolated_path, interpolated_park_path, ensure_path2])
 
-    #############################################################################################
-
-    ################################## control ##################################################
+    # implement MPC controller
     print('driving to destination ...')
 
     for i in range(len(interpolated_path)):         # experimenting with render
@@ -114,9 +99,9 @@ if __name__ == '__main__':
         res = env.render(coord[0],coord[1],my_car.theta,1)
 
         cv2.imshow('environment', res)
-
+    # animate final path
     for i,point in enumerate(final_path):
-        
+            # include if cases for different vehicle scenarios
             acc, delta = controller.optimize(my_car, final_path[i:i+MPC_HORIZON])
             # my_car.update_state(my_car.move(acc,  delta))    # regular car
             my_car.update_state(my_car.move_diwheel(acc, delta))  # diwheel
@@ -128,16 +113,10 @@ if __name__ == '__main__':
             if key == ord('s'):
                 cv2.imwrite('res.png', res*255)
 
-    # maybe create a new function that just animates some positions of the vehicle at certain points.
 
-
-    # zeroing car steer
-    # res = env.render(my_car.x, my_car.y, my_car.psi, 0)  # regular car
-    # res = env.render(my_car.x, my_car.y, my_car.theta, 0)  # Diwheel
     logger.save_data()
     cv2.imshow('environment', res)
     key = cv2.waitKey()
-    #############################################################################################
 
     cv2.destroyAllWindows()
 

@@ -4,7 +4,7 @@ import scipy.interpolate as scipy_interpolate
 from utils import angle_of_line
 
 
-############################################## Functions ######################################################
+# interpolation functions
 
 def interpolate_b_spline_path(x, y, n_path_points, degree=3):
     ipl_t = np.linspace(0.0, len(x) - 1, len(x))
@@ -25,7 +25,7 @@ def interpolate_path(path, sample_rate):
     # new_path[new_path<0] = 0
     return new_path
 
-################################################ Path Planner ################################################
+# A_star search planner
 
 class AStarPlanner:
     def __init__(self, ox, oy, resolution, rr):
@@ -222,7 +222,7 @@ class AStarPlanner:
 
 
 class PathPlanning:
-    def __init__(self,obstacles,vehicle):           # add arguments for robot radius and whatnot
+    def __init__(self,obstacles,vehicle):
         self.margin = 5
         #scale obstacles from env margin to pathplanning margin
         obstacles = obstacles + np.array([self.margin,self.margin])
@@ -253,7 +253,7 @@ class PathPlanning:
         path = np.vstack([rx,ry]).T
         return path[::-1]
 
-############################################### Park Path Planner #################################################
+# Parallel parking object
 
 class ParkPathPlanning:
     def __init__(self,obstacles,vehicle):
