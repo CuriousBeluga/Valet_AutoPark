@@ -47,8 +47,9 @@ if __name__ == '__main__':
         wheel_width = 3  # diwheel
         length = 2
         dt = 0.2
-        my_car = DiWheel_Dyanmics(start[0], start[1], 0, np.deg2rad(args.psi_start), length, dt, theta_0=0,
-                                  wheel_base=2)  # diwheel
+        theta_initial = 0
+        my_car = DiWheel_Dyanmics(start[0], start[1], 0, np.deg2rad(args.psi_start), length, dt, theta_initial,wheel_length/2,
+                                    wheel_base=2)  # diwheel
     elif vehicle == 'car':
         car_length = 80            #car
         car_width = 40            #car
@@ -94,24 +95,25 @@ if __name__ == '__main__':
     # implement MPC controller
     print('driving to destination ...')
 
-    for i in range(len(interpolated_path)):         # experimenting with render
-        coord = interpolated_path[i]
-        res = env.render(coord[0],coord[1],my_car.theta,1)
-
-        cv2.imshow('environment', res)
+    # for i in range(len(interpolated_path)):         # experimenting with render
+    #     coord = interpolated_path[i]
+    #     res = env.render(coord[0],coord[1],my_car.theta,1)
+    #
+    #     cv2.imshow('environment', res)
     # animate final path
     for i,point in enumerate(final_path):
-            # include if cases for different vehicle scenarios
-            acc, delta = controller.optimize(my_car, final_path[i:i+MPC_HORIZON])
-            # my_car.update_state(my_car.move(acc,  delta))    # regular car
-            my_car.update_state(my_car.move_diwheel(acc, delta))  # diwheel
-            # res = env.render(my_car.x, my_car.y, my_car.psi, delta) # for regular car
-            res = env.render(my_car.x, my_car.y, my_car.theta, delta)  # for diwheel
-            logger.log(point, my_car, acc, delta)
-            cv2.imshow('environment', res)
-            key = cv2.waitKey(1)
-            if key == ord('s'):
-                cv2.imwrite('res.png', res*255)
+        # include if cases for different vehicle scenarios
+        #acc, delta = controller.optimize(my_car, final_path[i:i+MPC_HORIZON])
+        # my_car.update_state(my_car.move(acc,  delta))    # regular car
+        acc, delta = controller.optimize(my_car, final_path[i:i + MPC_HORIZON],vehicle)
+        my_car.update_state(my_car.move_diwheel(acc, delta))  # diwheel
+        # res = env.render(my_car.x, my_car.y, my_car.psi, delta) # for regular car
+        res = env.render(my_car.x, my_car.y, my_car.psi, delta)  # for diwheel
+        logger.log(point, my_car, acc, delta)
+        cv2.imshow('environment', res)
+        key = cv2.waitKey(1)
+        if key == ord('s'):
+            cv2.imwrite('res.png', res*255)
 
 
     logger.save_data()

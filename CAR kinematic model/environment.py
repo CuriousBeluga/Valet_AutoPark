@@ -4,7 +4,7 @@ import numpy as np
 class Environment:
     def __init__(self,obstacles,vehicle_type,car_length = 80,car_width = 40,wheel_length = 15, wheel_width = 7):
         self.margin = 5
-        #coordinates are in [x,y] format
+        #coordinates are [x,y] format
         self.car_length = car_length
         self.car_width = car_width
         self.wheel_length = wheel_length
@@ -90,8 +90,8 @@ class Environment:
 
         rendered = cv2.resize(np.flip(rendered, axis=0), (700,700))
         return rendered
-    def render_trailer(self):
-        # need different render scheme for trailer because it is two bodies
+    def draw_dot(self):
+        # better representation of
         pass
 
 

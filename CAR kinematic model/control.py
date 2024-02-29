@@ -1,3 +1,5 @@
+import math
+
 import numpy as np
 from scipy.optimize import minimize
 import copy
@@ -21,8 +23,6 @@ class Car_Dynamics:
         return np.array([[x_dot, y_dot, v_dot, psi_dot]]).T
 
     def update_state(self, state_dot):
-        # self.u_k = command
-        # self.z_k = state
         self.state = self.state + self.dt*state_dot
         self.x = self.state[0,0]
         self.y = self.state[1,0]
@@ -32,8 +32,6 @@ class Car_Dynamics:
 
 # create classes for diWheel robot and truck robot
 class Trailer_Dynamics(Car_Dynamics):
-    # equations are sourced from MATLAB article: https://www.mathworks.com/help/nav/ug/reverse-capable-motion-planning-for-tractor-trailer-model-using-plannercontrolrrt.html
-    # and laValle: https://msl.cs.uiuc.edu/planning/node661.html
     def __init__(self, x_0, y_0, v_0, psi_0, vehicle_length, dt,trailer_length,beta):
         super().__init__(x_0, y_0, v_0, psi_0, vehicle_length, dt)                  # inherit some of the variables from the Car class
         self.trailer_L = trailer_length
@@ -69,33 +67,31 @@ class Trailer_Dynamics(Car_Dynamics):
         self.v_trailer = self.state[6,0]
         self.beta = self.state[7,0]
 class DiWheel_Dyanmics(Car_Dynamics):
-    def __init__(self, x_0, y_0, v_0, psi_0, length, dt, theta_0,wheel_base = 2):
+    def __init__(self, x_0, y_0, v_0, psi_0, length, dt, theta_0,radius,wheel_base = 2):
         super().__init__(x_0, y_0, v_0, psi_0, length, dt)
         self.theta = theta_0
         self.wheel_base = wheel_base        # need to specify wheel_base later
-        self.state = np.array([[self.x, self.y, self.v, self.theta]]).T
-
-    def move_diwheel(self, accelerate, delta):
-        v_left = v_right = accelerate*delta
-        # linear and angular velocities
-        v = (v_left + v_right)/2.0
-        omega = (v_right-v_left)/self.wheel_base
-        x_dot = v * np.cos(self.theta)
-        y_dot = v * np.sin(self.theta)
-        v_dot = accelerate
-        self.theta += omega * delta
-        self.theta %= (2 * np.pi)
-        # theta returns the orientation of the vehicle
-        return np.array([[x_dot, y_dot, v_dot, self.theta]]).T
-
-    def update_state(self, state_dot):
-        # self.u_k = command
-        # self.z_k = state
+        self.radius = radius
+        self.v_left = self.v_right = v_0
+        self.state = np.array([[self.x, self.y, self.v, self.psi]]).T
+        # self.state = [[self.x], [self.y], [self.v], [self.psi]]
+    def move_diwheel(self, accel1, accel2):          # needs two inputs acceleration of each wheel
+        x_dot = self.radius/2*(self.v_right+self.v_left)*np.cos(self.psi)
+        y_dot = self.radius/2*(self.v_right+self.v_left)*np.sin(self.psi)
+        v_dot = accel1 + accel2
+        psi_dot = self.radius/self.wheel_base*(self.v_right - self.v_left)
+        return np.array([[x_dot, y_dot, v_dot, psi_dot]]).T
+        # return [[x_dot], [y_dot], [v_dot], [psi_dot]]
+    def update_diwheel_state(self, state_dot):
+        # print(state_dot)
         self.state = self.state + self.dt*state_dot
         self.x = self.state[0,0]
         self.y = self.state[1,0]
-        self.v = self.state[2,0]
-        self.theta = self.state[3,0]
+        self.v = self.state[2, 0]
+        self.psi = self.state[3,0]
+        # self.v_left = self.state[2,0]
+        # self.v_right = self.state[3,0]
+        # self.psi = self.state[4,0]
 
 class MPC_Controller:
     def __init__(self):
@@ -124,7 +120,7 @@ class MPC_Controller:
                 cost += np.sum(self.Rd@((u_k[:,i+1] - u_k[:,i])**2))
         return cost
 
-    def optimize(self, my_car, points):
+    def optimize(self, my_car, points,vehicle):
         self.horiz = points.shape[0]
         bnd = [(-5, 5),(np.deg2rad(-60), np.deg2rad(60))]*self.horiz
         result = minimize(self.mpc_cost, args=(my_car, points), x0 = np.zeros((2*self.horiz)), method='SLSQP', bounds = bnd)
